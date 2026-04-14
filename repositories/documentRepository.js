@@ -1,17 +1,18 @@
 const { query } = require('../config/database');
 
 class DocumentRepository {
-    async getWeeklyCountByUserId(userId) {
+    // 🚀 İsim ve SQL sorgusu "Toplam Kayıt Sayısı"nı getirecek şekilde güncellendi
+    async getTotalCountByUserId(userId) {
         const sql = `
             SELECT COUNT(*) as count 
             FROM documents 
-            WHERE user_id = ? 
-            AND created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)`;
+            WHERE user_id = ?
+        `;
         const result = await query(sql, [userId]);
         return result[0].count;
     }
 
-    async create({ user_id, doc_name, doc_path,analysis_summary }) {
+    async create({ user_id, doc_name, doc_path, analysis_summary }) {
         const sql = `
             INSERT INTO documents (user_id, doc_name, doc_path, analysis_summary) 
             VALUES (?, ?, ?, ?)
@@ -41,3 +42,4 @@ class DocumentRepository {
 }
 
 module.exports = new DocumentRepository();
+
