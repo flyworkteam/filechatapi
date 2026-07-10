@@ -13,14 +13,14 @@ class DocumentService {
     if (!user) throw new Error("Kullanıcı bulunamadı.");
 
     // 2. Limit Kontrolü (Premium değilse ve toplam 1 hakkını doldurmuşsa)
- //           if (!user.is_premium) {
+            if (!user.is_premium) {
     // 🚀 Artık getTotalCountByUserId fonksiyonunu çağırıyoruz
-   //           const totalCount = await documentRepository.getTotalCountByUserId(userId);
-     //       if (totalCount >= 1) {
+              const totalCount = await documentRepository.getTotalCountByUserId(userId);
+            if (totalCount >= 1) {
     // 🚀 Hata mesajı güncellendi
-       //        throw new Error('LIMIT_EXCEEDED: Ücretsiz kullanım limitiniz doldu. Lütfen Premium\'a geçin.');
-         //   }
-     //   }
+               throw new Error('LIMIT_EXCEEDED: Ücretsiz kullanım limitiniz doldu. Lütfen Premium\'a geçin.');
+            }
+       }
 
     // 🚀 1. ADIM: DOSYA ADI DÜZELTME (Multer Türkçe Karakter Hatası Çözümü)
     let originalName = file.originalname;
