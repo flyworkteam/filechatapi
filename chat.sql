@@ -18,6 +18,7 @@ CREATE TABLE documents (
     user_id INT NOT NULL,
     doc_name VARCHAR(255),
     doc_path TEXT,
+    original_doc_path TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

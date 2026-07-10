@@ -12,18 +12,20 @@ class DocumentRepository {
         return result[0].count;
     }
 
-    async create({ user_id, doc_name, doc_path, analysis_summary }) {
+    async create({ user_id, doc_name, doc_path, analyzed_docx_path, original_doc_path, analysis_summary }) {
         const sql = `
-            INSERT INTO documents (user_id, doc_name, doc_path, analysis_summary) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO documents (user_id, doc_name, doc_path, analyzed_docx_path, original_doc_path, analysis_summary) 
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
-        const result = await query(sql, [user_id, doc_name, doc_path, analysis_summary]);
+        const result = await query(sql, [user_id, doc_name, doc_path, analyzed_docx_path, original_doc_path, analysis_summary]);
 
         return {
             id: result.insertId,
             user_id,
             doc_name,
-            doc_path, // Analiz edilmiş PDF Linki
+            doc_path,
+            analyzed_docx_path,
+            original_doc_path,
             analysis_summary,
             created_at: new Date()
         };
@@ -31,7 +33,7 @@ class DocumentRepository {
 
     async findByUserId(userId) {
         const sql = `
-        SELECT id, doc_name, doc_path, analysis_summary, created_at 
+        SELECT id, doc_name, doc_path, analyzed_docx_path, original_doc_path, analysis_summary, created_at 
         FROM documents 
         WHERE user_id = ? 
         ORDER BY created_at DESC
