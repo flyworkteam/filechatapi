@@ -137,6 +137,83 @@ class GeminiService {
             throw new Error('Doküman analiz edilirken bir hata oluştu.');
         }
     }
+
+    async sendChatMessage({ history = [], message, documentContext = null }) {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error('GEMINI_API_KEY tanımlı değil.');
+        }
+
+        const systemInstruction = `Sen FileChat adında profesyonel, yardımsever ve resmi bir yapay zeka asistanısın.
+
+TEMEL KURALLAR:
+1. DİL KURALI (ÇOK ÖNEMLİ): Kullanıcı seninle hangi dilde konuşursa (Türkçe, İngilizce, Almanca vb.), sen de mutlaka o dilde cevap vereceksin.
+2. Üslup: Seçilen dilde her zaman resmi, saygılı ve akademik seviyede olmalı.
+3. Uzmanlık Alanın: İş dünyası, akademik araştırmalar ve dosya formatları (Excel, Word, PDF, CSV vb.).
+4. Tanıtım: "FileChat" uygulaması sorulursa, ilgili dilde "Belgelerinizi analiz eden akıllı asistan" olduğunu söyle.
+5. Asla argo kullanma.
+6. Cevapların net, açıklayıcı ve profesyonel olsun.`;
+
+        const contents = this._buildChatContents(history, message, documentContext);
+
+        try {
+            const response = await axios.post(
+                `${GEMINI_API_URL}?key=${apiKey}`,
+                {
+                    systemInstruction: {
+                        parts: [{ text: systemInstruction }],
+                    },
+                    contents,
+                },
+                {
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 120000,
+                }
+            );
+
+            const reply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!reply) {
+                throw new Error('Gemini cevap döndürmedi.');
+            }
+
+            return reply.trim();
+        } catch (error) {
+            const geminiMessage = error.response?.data?.error?.message;
+            logger.error('Gemini Chat Error:', geminiMessage || error.message);
+            throw new Error(geminiMessage || 'Sohbet yanıtı alınırken bir hata oluştu.');
+        }
+    }
+
+    _buildChatContents(history, message, documentContext) {
+        const contents = [];
+
+        if (documentContext) {
+            contents.push({
+                role: 'user',
+                parts: [{ text: `Kullanıcı şu belge analizini inceliyor:\n${documentContext}` }],
+            });
+            contents.push({
+                role: 'model',
+                parts: [{ text: 'Belge analizini inceledim. Sorularınızı yanıtlamaya hazırım.' }],
+            });
+        }
+
+        history
+            .filter((item) => !item.isFileSummary)
+            .forEach((item) => {
+                contents.push({
+                    role: item.isUser ? 'user' : 'model',
+                    parts: [{ text: item.text }],
+                });
+            });
+
+        contents.push({
+            role: 'user',
+            parts: [{ text: message }],
+        });
+
+        return contents;
+    }
 }
 
 module.exports = new GeminiService();
